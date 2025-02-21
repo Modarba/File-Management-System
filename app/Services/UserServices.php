@@ -1,6 +1,8 @@
 <?php
 namespace App\Services;
-use App\Interface1\UserInterface;
+use App\Enums\HttpStatusCode;
+use App\Interfaces\UserInterface;
+use App\Traits\ApiResponse;
 use Illuminate\Support\Facades\Request;
 
 class UserServices
@@ -12,11 +14,7 @@ class UserServices
     }
     public function getAllFileForUser()
     {
-        return $this->userRepository->getAllFileForUser();
-    }
-    public function addFolder(\Illuminate\Http\Request $request)
-    {
-        return   $this->userRepository->addFolder($request);
+   return $this->userRepository->getAllFileForUser();
     }
     public function rootWithFolderBelongsTo()
     {
@@ -26,12 +24,9 @@ class UserServices
     {
         return $this->userRepository->childWithFolderBelongsTo();
     }
-    public function deleteFolder($id)
-    {
-        return $this->userRepository->deleteFolder($id);
-    }
     public function childRecursive()
     {
         return $this->userRepository->childRecursive();
     }
+
 }

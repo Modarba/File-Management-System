@@ -15,22 +15,18 @@ class Folder extends Model
         'files',
         'name',
     ];
-    //Root belongs to Folder
     public function root()
     {
         return $this->belongsTo(Folder::class,'parent_id');
     }
-    // child has many Folder
     public function child()
     {
         return $this->hasMany(Folder::class,'parent_id');
     }
-    //Child Recursive
     public function childRecursive():HasMany
     {
         return $this->child()->with('childRecursive');
     }
-    //Folder Belongs to User
     public function user()
     {
         return $this->belongsTo(User::class);

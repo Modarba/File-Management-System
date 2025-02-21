@@ -21,8 +21,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('folder')->group(function () {
         Route::get('getAll', [UserController::class, 'getAllFileForUser']);
         Route::get('sub', [UserController::class, 'rootBelongsToFolder']);
-        Route::delete('delete/{id}', [UserController::class, 'deleteFolder']);
-        Route::post('add',[\App\Http\Controllers\UserController::class,'addFolder']);
+        Route::delete('delete/{id}', [\App\Http\Controllers\FolderController::class, 'deleteFolder']);
+        Route::post('add',[\App\Http\Controllers\FolderController::class,'addFolder']);
+        Route::post('update/{id}',[\App\Http\Controllers\FolderController::class,'updateFolder']);
     });
     Route::prefix('child')->group(function () {
         Route::get('/', [UserController::class, 'childHasManyFolder']);

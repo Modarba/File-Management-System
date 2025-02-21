@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
-use App\Interface1\authenticationInterface;
-use App\Interface1\UserInterface;
-use App\Repository\authenticationRepository;
+use App\Interfaces\AuthenticationInterface;
+use App\Interfaces\FolderInterface;
+use App\Interfaces\UserInterface;
+use App\Repository\AuthenticationRepository;
+use App\Repository\FolderRepository;
 use App\Repository\UserRepository;
 use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
@@ -14,8 +16,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(authenticationInterface::class,authenticationRepository::class);
+        $this->app->bind(AuthenticationInterface::class,AuthenticationRepository::class);
         $this->app->bind(UserInterface::class,UserRepository::class);
+        $this->app->bind(FolderInterface::class,FolderRepository::class);
     }
 
     /**

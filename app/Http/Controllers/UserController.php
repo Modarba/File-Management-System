@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Enums\HttpStatusCode;
 use App\Models\Folder;
 use App\Models\User;
 use App\Services\UserServices;
@@ -12,29 +13,25 @@ use Laravel\SerializableClosure\Support\SelfReference;
 
 class UserController extends Controller
 {
-    use ApiResponse;
-    public function getAllFileForUser(UserServices $services)
+    protected $userServices;
+    public function __construct(UserServices $userServices)
     {
-        return $services->getAllFileForUser();
+        $this->userServices=$userServices;
     }
-    public function rootBelongsToFolder( UserServices $services)
+    public function getAllFileForUser()
     {
-        return $services->rootWithFolderBelongsTo();
+        return $this->successResponse($this->userServices->getAllFileForUser(),'success',HttpStatusCode::SUCCESS->value);
     }
-    public function childHasManyFolder(UserServices $services)
+    public function rootBelongsToFolder()
     {
-        return $services->childHasManyFolder();
+        return $this->successResponse($this->userServices->rootWithFolderBelongsTo(),'success',HttpStatusCode::SUCCESS->value);
     }
-    public function deleteFolder(UserServices $services,$id)
+    public function childHasManyFolder()
     {
-        return $services->deleteFolder($id);
+        return $this->successResponse($this->userServices->childHasManyFolder(),'success',HttpStatusCode::SUCCESS->value);
     }
-    public function addFolder(UserServices $services,Request $request)
+    public function getChildRecursive()
     {
-        return $services->addFolder($request);
-    }
-    public function getChildRecursive(UserServices $services)
-    {
-        return $services->childRecursive();
+        return $this->successResponse($this->userServices->childRecursive(),'success',HttpStatusCode::SUCCESS->value);
     }
 }
