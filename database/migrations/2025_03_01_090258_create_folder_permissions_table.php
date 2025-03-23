@@ -11,25 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('folders', function (Blueprint $table)
-        {
+        Schema::create('folder_permissions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('folder_id')->constrained('folders')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('parent_id')->nullable()->constrained('folders')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->enum('type', ['folder', 'file']);
-            $table->index('parent_id');
-            $table->string('name')->nullable();
-            $table->string('path')->nullable();
-            $table->index('path');
-            $table->integer('size')->nullable();
+            $table->enum('permission', ['read', 'write', 'delete'])->default('read');
             $table->timestamps();
         });
     }
+
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('folders');
+        Schema::dropIfExists('folder_permissions');
     }
 };
