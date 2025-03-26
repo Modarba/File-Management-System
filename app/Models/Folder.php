@@ -52,6 +52,14 @@ class Folder extends Model
             $parent_id->save();
         });
     }
+    public function Folder()
+    {
+        return $this->hasMany(Folder::class,'parent_id')->where('type','like','folder');
+    }
+    public function File()
+    {
+        return $this->hasMany(Folder::class,'parent_id')->where('type','like','file');
+    }
     public function root()
     {
         return $this->belongsTo(Folder::class,'parent_id');

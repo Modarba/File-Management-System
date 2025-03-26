@@ -12,7 +12,7 @@ class CalculateSize extends Command
      *
      * @var string
      */
-    protected $signature = 'calculate:size {size}';
+    protected $signature = 'calculate:size {id}';
 
     /**
      * The console command description.
@@ -26,7 +26,7 @@ class CalculateSize extends Command
      */
     public function handle()
     {
-       $folderId= $this->argument('size');
+       $folderId= $this->argument('id');
        $sum=Folder::query()
            ->where('path','like',"%$folderId%")
            ->where('type','like','file')

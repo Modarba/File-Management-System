@@ -25,7 +25,6 @@ class QueryController extends Controller
             ->havingRaw('count(*) > 1')->get();
         return $this->successResponse($folder, 'success', HttpStatusCode::SUCCESS->value);
     }
-
     //خلي اول واحد وحذيف الباقي
     public function deleteOfFolder(Request $request)
     {
@@ -83,12 +82,17 @@ class QueryController extends Controller
     $user=User::query()->has('file')->get();
     return $user;
     }
-//orderBy
-    public function orderFolder($folderId)
+    public function folderNoFile()
     {
-        $countChildren=Folder::query()
-            ->where('path', 'like', "%$request->path%");
+    $folder=Folder::query()->doesntHave('file')->get();
+    return $this->successResponse($folder,'success', HttpStatusCode::SUCCESS->value);
     }
+    public function betweenSize(Request $request)
+    {
+        $folder=Folder::query()
+            ->whereBetween('size', [$request->from,$request->to])->get();
+        return $folder;
 
+    }
 }
 

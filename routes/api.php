@@ -22,6 +22,9 @@ Route::prefix('user')->name('auth.')->group(function () {
 });
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('folder')->name('folder.')->group(function () {
+        Route::post('between',[\App\Http\Controllers\QueryController::class,'betweenSize']);
+        Route::get('/NoFile',[\App\Http\Controllers\QueryController::class,'folderNoFile']);
+        Route::get('order/{id}',[\App\Http\Controllers\QueryController::class,'orderFolder']);
         Route::get('noFolder',[\App\Http\Controllers\QueryController::class,'userNoFolder']);
 Route::get('oneFolder',[\App\Http\Controllers\QueryController::class,'userHasAtLeastOneFolder']);
         Route::post('nameNot',[\App\Http\Controllers\QueryController::class,'nameNotFound']);
