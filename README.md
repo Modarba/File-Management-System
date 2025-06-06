@@ -2,58 +2,107 @@
 
 ## Project Overview
 
-The **File Management System** is a comprehensive, scalable web application built on **Laravel 11**, designed to facilitate advanced management of folders and files through a hierarchical structure combined with a robust permission model. This system empowers users to efficiently create, organize, upload, download, and manipulate files and folders with fine-grained access control, supporting both individual and collaborative workflows.
+The **File Management System** is a robust, scalable Laravel 11 web application designed for advanced management of folders and files with a hierarchical structure and a granular permission system. It enables users to create, organize, upload, download, and manage files and folders efficiently, with fine-grained access control supporting both individual and collaborative use cases.
 
-Leveraging Laravel’s powerful features such as Eloquent ORM, event-driven architecture, queue system, and modular design patterns, the application ensures maintainability, performance, and extensibility. It offers a rich API-first interface, enabling seamless integration with frontend clients or third-party services.
+The system leverages Laravel’s Eloquent ORM, event-driven architecture, queued jobs, and modular design to ensure maintainability, extensibility, and performance. It exposes a RESTful API for integration with frontend clients or other services.
 
 ---
 
-## Key Features & Functionalities
+## Features & Functionalities
 
 ### Folder and File Management
-- Full CRUD capabilities: create, rename, move, and delete folders and files.
-- Hierarchical folder structure with parent-child relationships.
-- Path-based querying for efficient navigation.
+
+- Create, update, rename, move, and delete folders and files.
+- Support for nested folder structures using self-referencing relationships (`parent_id`).
+- Path-based querying for efficient retrieval of folder hierarchies.
+- Hierarchical data modeled with recursive relationships enabling parent-child folder trees.
 
 ### Permission System
-- Granular access control with read, write, and delete permissions on folders.
-- Permission inheritance from parent to child folders.
-- API endpoints to manage permissions dynamically.
 
-### Advanced File Operations
-- Secure file uploads stored on a public disk.
-- Batch folder downloads as ZIP archives handled asynchronously via queues.
-- Automatic extraction of uploaded ZIP files.
+- Fine-grained permissions: read, write, and delete on folders for specific users.
+- Permission inheritance from parent folders to child folders to simplify management.
+- API endpoints to grant, update, or revoke permissions dynamically.
+- Permissions stored in dedicated tables with indices for performance.
 
-### Console Commands & Automation
-- Custom Artisan commands for folder statistics and maintenance.
-- Event listeners and observers to maintain data consistency.
+### File Operations
+
+- Upload files to a configured public disk with automatic storage management.
+- Batch download folders as ZIP archives using Laravel queued jobs to handle heavy workloads asynchronously.
+- Support for unzipping uploaded archives, automatically organizing extracted files within the folder structure.
+- Filesystem storage abstraction enables flexibility to switch between local, S3, or other disks.
+
+### Artisan Console Commands
+
+- Custom commands to:
+  - Retrieve child counts for folders.
+  - Order folders based on various criteria: size, creation date, etc.
+  - Update folder size metadata to reflect file additions/deletions.
+- These commands facilitate maintenance and reporting.
 
 ### Advanced Querying & Reporting
-- Duplicate folder detection and size-based queries.
-- User-folder association reports.
 
-### API-First Architecture
-- RESTful API endpoints for authentication, file and folder operations, and permission management.
-- Standardized JSON responses with a custom ApiResponse trait.
+- Queries for detecting duplicate folder names within a scope.
+- Size range queries to filter folders/files by their disk usage.
+- Retrieving users with or without associated files/folders.
+- Database indexes on frequently queried columns (`path`, `parent_id`, etc.) enhance performance.
 
-### Asynchronous Processing & Scalability
-- Queued jobs for resource-heavy tasks like ZIP generation.
-- Database indexing for optimized performance.
+### Event-Driven Architecture
+
+- Observers automatically update folder size and metadata when files or folders are created, updated, or deleted.
+- Events and listeners handle permission inheritance and cascading updates.
+- This architecture decouples business logic and ensures data integrity.
+
+### API-First Design
+
+- RESTful API endpoints for:
+  - User authentication and authorization.
+  - Folder and file CRUD operations.
+  - Permission management (granting, updating, revoking).
+- JSON responses standardized using a custom `ApiResponse` trait.
+- API routes grouped and versioned for scalability.
+
+### Asynchronous Processing
+
+- Use of Laravel queues (database, Redis, or other drivers) for processing heavy tasks like ZIP generation.
+- Improves user experience by offloading time-consuming tasks.
+
+### Database & Performance Optimization
+
+- Migrations define tables for folders, files, permissions, and jobs.
+- Indexes added on critical columns such as `path`, `parent_id`, and permission keys.
+- Foreign keys enforce referential integrity.
+- Efficient schema design supports hierarchical queries and fast lookups.
 
 ---
 
-## Technical Stack & Architecture
+## Technical Details
 
-- Laravel 11 (PHP 8.x)
-- MySQL database with optimized migrations and indexes
-- Eloquent ORM for database interactions
-- Laravel Queue system (Redis or database driver)
-- RESTful API design with JSON responses
-- Event-driven architecture (Events, Listeners, Observers)
-- Local/public disk storage for files
-- Role-based access control and permission inheritance
+### Data Models
 
+- **Folder**: has `id`, `name`, `parent_id`, `path`, `size`, timestamps.
+  - Self-referential `parent_id` forms a tree structure.
+  - `path` column stores full folder path for fast querying.
+- **File**: belongs to a folder, stores file metadata (name, size, MIME type, path).
+- **Permission**: links users to folders with permission types (read, write, delete).
+- **User**: standard Laravel user model with relationships to permissions.
+
+### Relationships
+
+- Folder has many children (folders).
+- Folder has many files.
+- User has many permissions on folders.
+
+### Folder Size Updates
+
+- Observers listen to file/folder changes.
+- Folder size is recalculated recursively to include all child folders and files.
+- Size updates triggered on create, update, delete events.
+
+### Queued ZIP Generation
+
+- On folder download request, a queued job creates a ZIP archive of the folder contents.
+- The job runs asynchronously to prevent blocking HTTP responses.
+- Users can download the ZIP once ready.
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
