@@ -1,68 +1,58 @@
-File Management System
-Project Overview
-The File Management System is a comprehensive, scalable web application built on Laravel 11, designed to facilitate advanced management of folders and files through a hierarchical structure combined with a robust permission model. This system empowers users to efficiently create, organize, upload, download, and manipulate files and folders with fine-grained access control, supporting both individual and collaborative workflows.
+# File Management System
+
+## Project Overview
+
+The **File Management System** is a comprehensive, scalable web application built on **Laravel 11**, designed to facilitate advanced management of folders and files through a hierarchical structure combined with a robust permission model. This system empowers users to efficiently create, organize, upload, download, and manipulate files and folders with fine-grained access control, supporting both individual and collaborative workflows.
 
 Leveraging Laravel’s powerful features such as Eloquent ORM, event-driven architecture, queue system, and modular design patterns, the application ensures maintainability, performance, and extensibility. It offers a rich API-first interface, enabling seamless integration with frontend clients or third-party services.
 
-Key Features & Functionalities
-1. Folder and File Management
-Full CRUD capabilities: Users can create, rename, move, and delete folders and files with ease.
+---
 
-Hierarchical Folder Structure: Support for infinite nesting of folders via parent-child relationships, allowing complex organization.
+## Key Features & Functionalities
 
-Path-based Querying: Efficient retrieval of folders and files based on their paths, enabling quick navigation and searches.
+### Folder and File Management
+- Full CRUD capabilities: create, rename, move, and delete folders and files.
+- Hierarchical folder structure with parent-child relationships.
+- Path-based querying for efficient navigation.
 
-2. Permission System
-Granular Access Control: Assign read, write, and delete permissions on specific folders per user.
+### Permission System
+- Granular access control with read, write, and delete permissions on folders.
+- Permission inheritance from parent to child folders.
+- API endpoints to manage permissions dynamically.
 
-Permission Inheritance: Child folders automatically inherit permissions from their parent folders, simplifying management.
+### Advanced File Operations
+- Secure file uploads stored on a public disk.
+- Batch folder downloads as ZIP archives handled asynchronously via queues.
+- Automatic extraction of uploaded ZIP files.
 
-API-Driven Permission Management: RESTful endpoints for granting, updating, and revoking permissions dynamically.
+### Console Commands & Automation
+- Custom Artisan commands for folder statistics and maintenance.
+- Event listeners and observers to maintain data consistency.
 
-3. Advanced File Operations
-File Upload & Storage: Securely upload files that are stored in a public disk with proper validation.
+### Advanced Querying & Reporting
+- Duplicate folder detection and size-based queries.
+- User-folder association reports.
 
-Batch Downloading: Download entire folders as ZIP archives, handled asynchronously via Laravel’s queue system to optimize performance and user experience.
+### API-First Architecture
+- RESTful API endpoints for authentication, file and folder operations, and permission management.
+- Standardized JSON responses with a custom ApiResponse trait.
 
-ZIP Extraction: Automatically unzip uploaded ZIP files and organize their contents into corresponding folders.
+### Asynchronous Processing & Scalability
+- Queued jobs for resource-heavy tasks like ZIP generation.
+- Database indexing for optimized performance.
 
-4. Console Commands & Automation
-Custom Artisan Commands: Tools for querying folder metrics such as child counts, sorting folders by size or creation date, and updating folder sizes to maintain accuracy.
+---
 
-Event Listeners & Observers: Automatically respond to changes in folders or files, e.g., recalculating folder sizes or propagating permission changes.
+## Technical Stack & Architecture
 
-5. Advanced Querying & Reporting
-Statistical Analysis: Identify duplicate folder names, folders within specific size ranges, and other useful metadata.
-
-User-Folder Relations: Retrieve users based on their folder/file associations for targeted reporting or audits.
-
-6. API-First Architecture
-RESTful APIs: Comprehensive endpoints covering authentication, folder/file operations, and permission management.
-
-Consistent Responses: Standardized HTTP responses enhanced by a custom ApiResponse trait to ensure uniformity and clarity.
-
-7. Asynchronous Processing & Scalability
-Queued Jobs: Efficient handling of resource-intensive tasks like ZIP archive creation, reducing server load and improving responsiveness.
-
-Database Optimization: Indexed key columns (e.g., path, parent_id) to accelerate query performance and ensure smooth scalability.
-
-Technical Stack & Architecture
-Backend Framework: Laravel 11 (PHP 8.x)
-
-Database: MySQL with optimized migrations and indexing
-
-ORM: Eloquent ORM with advanced relationships and scopes
-
-Queues: Laravel Queue system (Redis/Database)
-
-API Design: RESTful services with JSON responses
-
-Event-Driven: Observers, Events, and Listeners for real-time data consistency
-
-Storage: Local and public disks for file uploads and downloads
-
-Security: Role-based access controls and permission inheritance mechanisms
-
+- Laravel 11 (PHP 8.x)
+- MySQL database with optimized migrations and indexes
+- Eloquent ORM for database interactions
+- Laravel Queue system (Redis or database driver)
+- RESTful API design with JSON responses
+- Event-driven architecture (Events, Listeners, Observers)
+- Local/public disk storage for files
+- Role-based access control and permission inheritance
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
