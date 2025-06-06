@@ -1,144 +1,69 @@
 File Management System
-
 Project Overview
+The File Management System is a comprehensive, scalable web application built on Laravel 11, designed to facilitate advanced management of folders and files through a hierarchical structure combined with a robust permission model. This system empowers users to efficiently create, organize, upload, download, and manipulate files and folders with fine-grained access control, supporting both individual and collaborative workflows.
 
-The File Management System is a robust Laravel-based web application designed to manage folders and files with a focus on hierarchical organization, permissions, and efficient file operations. This system allows users to create, upload, download, and manage files and folders while enforcing access control through a granular permission model. It supports features like folder hierarchy, file compression (zip/unzip), and advanced querying capabilities, making it suitable for both personal and collaborative file management.
+Leveraging Laravel’s powerful features such as Eloquent ORM, event-driven architecture, queue system, and modular design patterns, the application ensures maintainability, performance, and extensibility. It offers a rich API-first interface, enabling seamless integration with frontend clients or third-party services.
 
-Built with Laravel 11, the project leverages Eloquent ORM for database interactions, Laravel's queue system for asynchronous tasks, and a modular architecture for maintainability. The system includes console commands, API endpoints, and event-driven logic to ensure scalability and flexibility.
+Key Features & Functionalities
+1. Folder and File Management
+Full CRUD capabilities: Users can create, rename, move, and delete folders and files with ease.
 
-Features
+Hierarchical Folder Structure: Support for infinite nesting of folders via parent-child relationships, allowing complex organization.
 
+Path-based Querying: Efficient retrieval of folders and files based on their paths, enabling quick navigation and searches.
 
+2. Permission System
+Granular Access Control: Assign read, write, and delete permissions on specific folders per user.
 
+Permission Inheritance: Child folders automatically inherit permissions from their parent folders, simplifying management.
 
+API-Driven Permission Management: RESTful endpoints for granting, updating, and revoking permissions dynamically.
 
-Folder and File Management:
+3. Advanced File Operations
+File Upload & Storage: Securely upload files that are stored in a public disk with proper validation.
 
+Batch Downloading: Download entire folders as ZIP archives, handled asynchronously via Laravel’s queue system to optimize performance and user experience.
 
+ZIP Extraction: Automatically unzip uploaded ZIP files and organize their contents into corresponding folders.
 
+4. Console Commands & Automation
+Custom Artisan Commands: Tools for querying folder metrics such as child counts, sorting folders by size or creation date, and updating folder sizes to maintain accuracy.
 
+Event Listeners & Observers: Automatically respond to changes in folders or files, e.g., recalculating folder sizes or propagating permission changes.
 
-Create, update, and delete folders and files.
+5. Advanced Querying & Reporting
+Statistical Analysis: Identify duplicate folder names, folders within specific size ranges, and other useful metadata.
 
+User-Folder Relations: Retrieve users based on their folder/file associations for targeted reporting or audits.
 
+6. API-First Architecture
+RESTful APIs: Comprehensive endpoints covering authentication, folder/file operations, and permission management.
 
-Support for hierarchical folder structures with parent-child relationships.
+Consistent Responses: Standardized HTTP responses enhanced by a custom ApiResponse trait to ensure uniformity and clarity.
 
+7. Asynchronous Processing & Scalability
+Queued Jobs: Efficient handling of resource-intensive tasks like ZIP archive creation, reducing server load and improving responsiveness.
 
+Database Optimization: Indexed key columns (e.g., path, parent_id) to accelerate query performance and ensure smooth scalability.
 
-Path-based querying for efficient folder retrieval.
+Technical Stack & Architecture
+Backend Framework: Laravel 11 (PHP 8.x)
 
+Database: MySQL with optimized migrations and indexing
 
+ORM: Eloquent ORM with advanced relationships and scopes
 
-Permission System:
+Queues: Laravel Queue system (Redis/Database)
 
+API Design: RESTful services with JSON responses
 
+Event-Driven: Observers, Events, and Listeners for real-time data consistency
 
+Storage: Local and public disks for file uploads and downloads
 
+Security: Role-based access controls and permission inheritance mechanisms
 
-Granular permissions (read, write, delete) for users on specific folders.
 
-
-
-Inheritance of permissions from parent folders to child folders.
-
-
-
-API endpoints to grant, update, or revoke permissions.
-
-
-
-File Operations:
-
-
-
-
-
-Upload files with automatic storage in a public disk.
-
-
-
-Download folders as ZIP archives using queued jobs for performance.
-
-
-
-Unzip uploaded ZIP files and organize extracted content.
-
-
-
-Console Commands:
-
-
-
-
-
-Custom Artisan commands to query folder child counts, order folders by various criteria (size, creation date, etc.), and update folder sizes.
-
-
-
-Querying and Reporting:
-
-
-
-
-
-Advanced querying for folder and file statistics (e.g., duplicate folder names, size ranges).
-
-
-
-Retrieve users with or without associated folders/files.
-
-
-
-Event-Driven Architecture:
-
-
-
-
-
-Observers to automatically update folder sizes when folders/files are created, updated, or deleted.
-
-
-
-Events and listeners for inheriting folder permissions.
-
-
-
-API-First Design:
-
-
-
-
-
-RESTful API endpoints for user authentication, folder/file operations, and permission management.
-
-
-
-Standardized HTTP responses with custom status codes using the ApiResponse trait.
-
-
-
-Asynchronous Processing:
-
-
-
-
-
-Queued jobs for generating ZIP archives to handle large folder downloads efficiently.
-
-
-
-Database Optimization:
-
-
-
-
-
-Indexes on frequently queried fields (e.g., path, parent_id) for performance.
-
-
-
-Efficient migrations for folder, permission, and job tables.
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
