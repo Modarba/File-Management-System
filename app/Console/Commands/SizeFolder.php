@@ -27,10 +27,8 @@ class SizeFolder extends Command
     public function handle()
     {
         $folderId=$this->argument('folder');
-        $get =Folder::
-            where('id',$folderId)
-            ->where('type','file')
-            ->update(['size'=>2]);
-        $this->info('success');
-    }
+        $folderId=Folder::query()
+            ->where('path','like',"%$folderId%")
+            ->update(['size'=>12.5]);
+        }
 }

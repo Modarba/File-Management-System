@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/NoFile',[\App\Http\Controllers\QueryController::class,'folderNoFile']);
         Route::get('order/{id}',[\App\Http\Controllers\QueryController::class,'orderFolder']);
         Route::get('noFolder',[\App\Http\Controllers\QueryController::class,'userNoFolder']);
-Route::get('oneFolder',[\App\Http\Controllers\QueryController::class,'userHasAtLeastOneFolder']);
+        Route::get('oneFolder',[\App\Http\Controllers\QueryController::class,'userHasAtLeastOneFolder']);
         Route::post('nameNot',[\App\Http\Controllers\QueryController::class,'nameNotFound']);
         Route::post('downloadQue',[\App\Http\Controllers\QueryController::class,'downloadQueue']);
         Route::post('name',[\App\Http\Controllers\QueryController::class,'nameOfFolder']);

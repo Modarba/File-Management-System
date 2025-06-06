@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Events\InheritFolderPermissions;
 use App\Listeners\ApplyInheritedPermissions;
 use App\Listeners\AssignParentPermissions;
+use App\Models\Folder;
+use App\Observers\FolderObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -30,7 +32,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Folder::observe(FolderObserver::class);
     }
 
     /**
@@ -38,6 +40,6 @@ class EventServiceProvider extends ServiceProvider
      */
     public function shouldDiscoverEvents(): bool
     {
-        return false;
+        return true;
     }
 }

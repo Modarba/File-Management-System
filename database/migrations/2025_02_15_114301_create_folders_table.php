@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('path')->nullable();
             $table->index('path');
-            $table->integer('size')->nullable();
+            $table->bigInteger('size')->nullable();
             $table->timestamps();
         });
     }

@@ -124,6 +124,7 @@ class FolderController extends Controller
                 'user_id' => $userId,
                 'parent_id' => $request->parent_id,
                 'name' => $fileName,
+                'size'=>$file->getSize(),
                 'type' => 'file',
             ]);
         }
@@ -272,13 +273,17 @@ class FolderController extends Controller
             ->where('folder_id', $folderId)
             ->where('permission', $permission)->exists();
     }
-    public function deleteFolder($id)
-    {
-        if (!$this->hasPermission(Auth::id(), $id, 'delete')) {
-            return $this->errorResponse('No data', 'no Permission', HttpStatusCode::FORBIDDEN->value);
-        } else
-            return $this->successResponse($this->folderService->deleteFolder($id), 'success', HttpStatusCode::SUCCESS->value);
+    public function deleteFolder($id){
+         $one=Folder::findorfail($id);
+         return $one->delete();
     }
+//    public function deleteFolder($id)
+//    {
+//        if (!$this->hasPermission(Auth::id(), $id, 'delete')) {
+//            return $this->errorResponse('No data', 'no Permission', HttpStatusCode::FORBIDDEN->value);
+//        } else
+//            return $this->successResponse($this->folderService->deleteFolder($id), 'success', HttpStatusCode::SUCCESS->value);
+//    }
     public function update(Request $request, $id)
     {
         if (!$this->hasPermission(Auth::id(), $id, 'write')) {

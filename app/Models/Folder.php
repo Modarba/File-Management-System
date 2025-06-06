@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\HttpStatusCode;
+use App\Observers\FolderObserver;
 use App\Services\FolderServices;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,18 +14,23 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 class Folder extends Model
 {
-
-    use HasFactory,HasRoles;
+    use HasFactory;
     protected $fillable= [
+        'size',
         'user_id',
         'parent_id',
         'name',
         'path_save',
         'type'
     ];
+   /**
+ * @param array $withCount
+ */
+
     public static function boot()
     {
         parent::boot();
+        Folder::observe(FolderObserver::class);
         static::creating(function ($parent_id) {
             if ($parent_id->parent_id) {
                 $parent = self::find($parent_id->parent_id);

@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use App\Enums\HttpStatusCode;
 use App\Jobs\GenerateZipArchive;
 use App\Models\Folder;
@@ -15,7 +13,6 @@ use function Laravel\Prompts\select;
 
 class QueryController extends Controller
 {
-    //بباث معين شوفي فولدرات متكررة اسمائها
     public function nameOfFolder(Request $request)
     {
         $folder = Folder::
@@ -25,7 +22,6 @@ class QueryController extends Controller
             ->havingRaw('count(*) > 1')->get();
         return $this->successResponse($folder, 'success', HttpStatusCode::SUCCESS->value);
     }
-    //خلي اول واحد وحذيف الباقي
     public function deleteOfFolder(Request $request)
     {
         DB::table('folders as f1')
@@ -37,7 +33,6 @@ class QueryController extends Controller
             ->where('path', 'like', "%$request->path%")
             ->delete();
     }
-    // الاسماء الغير مكرره
     public function nameNotFound(Request $request)
     {
         $folder = Folder::
@@ -47,7 +42,6 @@ class QueryController extends Controller
             ->havingRaw('count(*) = 1')->get();
         return $folder;
     }
-    // تحميل بالخلفيه
     public function downloadQueue(Request $request)
     {
         $folderId = $request->input('folderId');
@@ -58,7 +52,6 @@ class QueryController extends Controller
         }
         GenerateZipArchive::dispatch($folder->path, $userId);
     }
-    //يلي ما عندن ولا مجلد وعكسا يلي عندن مجلد واحد على الأقل
     public function userNoFolder()
     {
         $user=User::query()->
