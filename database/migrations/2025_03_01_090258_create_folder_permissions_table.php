@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('folder_id')->constrained('folders')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('permission', ['read', 'write', 'delete'])->default('read');
+            $table->index(['user_id', 'folder_id', 'permission']);
             $table->timestamps();
         });
     }

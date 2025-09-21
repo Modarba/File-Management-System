@@ -23,41 +23,6 @@ class Folder extends Model
         'path_save',
         'type'
     ];
-   /**
- * @param array $withCount
- */
-
-    public static function boot()
-    {
-        parent::boot();
-        Folder::observe(FolderObserver::class);
-        static::creating(function ($parent_id) {
-            if ($parent_id->parent_id) {
-                $parent = self::find($parent_id->parent_id);
-                if ($parent)
-                {
-                    $parent->path=$parent->path.'/'.($parent_id->id??'temp');
-                }
-            }
-            else
-            {
-                $parent_id->path = ($parent_id->id??'temp');
-            }
-        });
-        static::created(function ($parent_id) {
-            if ($parent_id->parent_id)
-            {
-                $parent = self::find($parent_id->parent_id);
-                if ($parent) {
-                    $parent_id->path = $parent->path . '/' . $parent_id->id;
-                }
-            } else
-            {
-                $parent_id->path = $parent_id->id;
-            }
-            $parent_id->save();
-        });
-    }
     public function Folder()
     {
         return $this->hasMany(Folder::class,'parent_id')->where('type','like','folder');
@@ -82,5 +47,20 @@ class Folder extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function generatePath(): string
+    {
+        if (!$this->parent_id) {
+            return (string) $this->id;
+        }
 
+        $cacheKey = "folder_path_{$this->parent_id}";
+        $parentPath = Redis::get($cacheKey);
+
+        if ($parentPath === null) {
+            $parent = self::find($this->parent_id, ['path']);
+            $parentPath = $parent ? $parent->path : (string) $this->id;
+            Redis::setex($cacheKey, 3600, $parentPath);
+        }
+        return $parentPath . '/' . $this->id;
+    }
 }

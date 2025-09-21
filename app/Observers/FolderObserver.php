@@ -1,50 +1,74 @@
 <?php
 namespace App\Observers;
 use App\Models\Folder;
+use Illuminate\Support\Facades\Redis;
+
 class FolderObserver
 {
+    public function creating(Folder $folder)
+    {
+        $folder->path = $folder->generatePath();
+    }
     public function created(Folder $folder)
     {
-        $this->updateFolderSize($folder->parent_id);
+        if ($folder->type === 'file' && $folder->parent_id) {
+            $this->updateParentSizes($folder->parent_id);
+        }
     }
     public function updated(Folder $folder)
     {
         $originalParentId = $folder->getOriginal('parent_id');
-        $currentParentId = $folder->parent_id;
-            $this->updateFolderSize($originalParentId);
-            $this->updateFolderSize($currentParentId);
+        if ($originalParentId !== $folder->parent_id || $folder->isDirty('size')) {
+            $this->updateParentSizes($originalParentId);
+            $this->updateParentSizes($folder->parent_id);
+            if ($originalParentId !== $folder->parent_id) {
+                $folder->path = $folder->generatePath();
+                $folder->saveQuietly();
+                $this->updateDescendantPaths($folder);
+            }
+        }
     }
     public function deleted(Folder $folder)
     {
-        $parentId = $folder->getOriginal('parent_id');
-        $this->updateFolderSize($parentId);
+        if ($folder->parent_id) {
+            $this->updateParentSizes($folder->parent_id);
+        }
+        Redis::del("folder_path_{$folder->id}");
     }
-    protected function updateFolderSize($folderId)
+    protected function updateDescendantPaths(Folder $folder)
     {
-        $folder = Folder::find($folderId);
-        if (!$folder) {
-            return;
-        }
-        $folderPath = $folder->path;
-        if (!$folderPath) {
-            return;
-        }
-        $folderIds = explode("/", $folderPath);
-        foreach ($folderIds as $parentId)
-        {
-            $parentFolder = Folder::find($parentId);
-            if (!$parentFolder) {
-                continue;
-            }
-            $parentPath = $parentFolder->path;
-            $size = Folder::query()
-                ->where(function($query) use ($parentPath) {
-                    $query->where('path', $parentPath)
-                        ->orWhere('path', 'like', $parentPath . '/%');
-                })
-                ->where('type', 'file')
-                ->sum('size');
-            $parentFolder->update(['size' => $size]);
+        $descendants = $folder->children()->get(['id', 'path']);
+        foreach ($descendants as $descendant) {
+            $descendant->path = $descendant->generatePath();
+            $descendant->saveQuietly();
+            Redis::setex("folder_path_{$descendant->id}", 3600, $descendant->path); // Cache new path
+            $this->updateDescendantPaths($descendant); // Recursive for nested descendants
         }
     }
+    protected function updateParentSizes($parentId)
+    {
+        if (!$parentId) {
+            return;
+        }
+        $cacheKey = "folder_size_{$parentId}";
+        $parent = Folder::find($parentId, ['id', 'path']);
+        if (!$parent) {
+            Redis::del($cacheKey);
+            return;
+        }
+        $cachedSize = Redis::get($cacheKey);
+        if ($cachedSize !== null) {
+            $parent->update(['size' => $cachedSize]);
+            return;
+        }
+        $size = Folder::where('type', 'file')
+            ->whereRaw('path LIKE CONCAT(?, "/%") OR path = ?', [$parent->path, $parent->path])
+            ->sum('size');
+        $parent->update(['size' => $size]);
+        Redis::setex($cacheKey, 3600, $size);
+        if ($parent->parent_id) {
+            $this->updateParentSizes($parent->parent_id);
+        }
+    }
+
 }

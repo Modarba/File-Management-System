@@ -1,28 +1,12 @@
 <?php
-
 namespace App\Http\Controllers;
 use App\Enums\HttpStatusCode;
-use App\Enums\ItemType;
-use App\Events\InheritFolderPermissions;
 use App\Models\Folder;
 use App\Models\FolderPermission;
-use App\Models\User;
-use App\Repository\FolderRepository;
 use App\Services\FolderServices;
-use Dotenv\Store\File\Paths;
-use Hamcrest\Core\Set;
-use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\LazyCollection;
-use Illuminate\Support\Str;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use ZipArchive;
 class FolderController extends Controller
 {
