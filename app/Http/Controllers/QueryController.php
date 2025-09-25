@@ -3,89 +3,224 @@ namespace App\Http\Controllers;
 use App\Enums\HttpStatusCode;
 use App\Jobs\GenerateZipArchive;
 use App\Models\Folder;
+use App\Models\FolderPermission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
-use function Laravel\Prompts\select;
 
 class QueryController extends Controller
 {
     public function nameOfFolder(Request $request)
     {
-        $folder = Folder::
-        where('path', 'like', "%$request->path%")
-            ->groupBy('name')
-            ->select('name', DB::raw('count(*) as count'))
-            ->havingRaw('count(*) > 1')->get();
-        return $this->successResponse($folder, 'success', HttpStatusCode::SUCCESS->value);
+        $request->validate(['path' => 'required|string']);
+        $cacheKey = 'duplicate_folders_' . md5($request->path);
+        $folders = Redis::get($cacheKey);
+        if ($folders === null) {
+            $folders = Folder::where('path', 'like', $request->path . '%')
+                ->where('user_id', Auth::id())
+                ->groupBy('name')
+                ->select('name', DB::raw('count(*) as count'))
+                ->havingRaw('count(*) > 1')
+                ->get()
+                ->toArray();
+            Redis::setex($cacheKey, 3600, json_encode($folders));
+        } else {
+            $folders = json_decode($folders, true);
+        }
+        return $this->successResponse($folders, 'Duplicate folder names retrieved successfully', HttpStatusCode::SUCCESS->value);
     }
     public function deleteOfFolder(Request $request)
     {
-        DB::table('folders as f1')
-            ->leftJoin(DB::raw('(SELECT MIN(id) as min_id, name FROM folders GROUP BY name) as f2'), function ($join) {
-                $join->on('f1.name', '=', 'f2.name')
-                    ->whereColumn('f1.id', '>', 'f2.min_id');
-            })
-            ->whereNotNull('f2.min_id')
-            ->where('path', 'like', "%$request->path%")
-            ->delete();
+        $request->validate(['path' => 'required|string']);
+        $folders = Folder::where('path', 'like', $request->path . '%')
+            ->where('user_id', Auth::id())
+            ->get(['id', 'name', 'path']);
+        $folderIdsToDelete = [];
+        $nameCounts = [];
+        foreach ($folders as $folder) {
+            if (!$this->hasPermission(Auth::id(), $folder->id, 'delete')) {
+                continue;
+            }
+            $nameCounts[$folder->name][] = $folder->id;
+        }
+        foreach ($nameCounts as $name => $ids) {
+            if (count($ids) > 1) {
+                $keepId = min($ids);
+                $folderIdsToDelete = array_merge($folderIdsToDelete, array_diff($ids, [$keepId]));
+            }
+        }
+        if (!empty($folderIdsToDelete)) {
+            Folder::whereIn('id', $folderIdsToDelete)->delete();
+            foreach ($folderIdsToDelete as $id) {
+                Redis::del("folder_path_{$id}");
+                Redis::del("folder_size_{$id}");
+            }
+        }
+
+        return $this->successResponse(null, 'Duplicate folders deleted successfully', HttpStatusCode::SUCCESS->value);
     }
     public function nameNotFound(Request $request)
     {
-        $folder = Folder::
-        where('path', 'like', "%$request->path%")
-            ->groupBy('name')
-            ->select('name', DB::raw('count(*) as count'))
-            ->havingRaw('count(*) = 1')->get();
-        return $folder;
+        $request->validate(['path' => 'required|string']);
+        $cacheKey = 'unique_folders_' . md5($request->path);
+        $folders = Redis::get($cacheKey);
+        if ($folders === null) {
+            $folders = Folder::where('path', 'like', $request->path . '%')
+                ->where('user_id', Auth::id())
+                ->groupBy('name')
+                ->select('name', DB::raw('count(*) as count'))
+                ->havingRaw('count(*) = 1')
+                ->get()
+                ->toArray();
+            Redis::setex($cacheKey, 3600, json_encode($folders));
+        } else {
+            $folders = json_decode($folders, true);
+        }
+        return $this->successResponse($folders, 'Unique folder names retrieved successfully', HttpStatusCode::SUCCESS->value);
     }
     public function downloadQueue(Request $request)
     {
+        $request->validate(['folderId' => 'required|exists:folders,id']);
         $folderId = $request->input('folderId');
         $userId = Auth::id();
-        $folder = Folder::find($folderId);
-        if (!$folder) {
-            return $this->errorResponse('', '', HttpStatusCode::INTERNAL_SERVER_ERROR->value);
+        if (!$this->hasPermission($userId, $folderId, 'read')) {
+            return $this->errorResponse('No permission to download', 'error', HttpStatusCode::FORBIDDEN->value);
         }
-        GenerateZipArchive::dispatch($folder->path, $userId);
+        $folder = Folder::findOrFail($folderId, ['path']);
+        $jobId = uniqid('zip_', true);
+        GenerateZipArchive::dispatch($folder->path, $userId, $jobId);
+        Redis::setex("download_job_{$jobId}", 3600, 'queued');
+
+        return $this->successResponse(['job_id' => $jobId], 'Download job queued successfully', HttpStatusCode::SUCCESS->value);
     }
     public function userNoFolder()
     {
-        $user=User::query()->
-            doesntHave('folder')->get();
-        return response()->json($user, HttpStatusCode::SUCCESS->value);
+        $cacheKey = 'users_no_folder';
+        $users = Redis::get($cacheKey);
+
+        if ($users === null) {
+            $users = User::whereDoesntHave('folders')
+                ->select(['id', 'name', 'email'])
+                ->get()
+                ->toArray();
+            Redis::setex($cacheKey, 3600, json_encode($users));
+        } else {
+            $users = json_decode($users, true);
+        }
+        return $this->successResponse($users, 'Users without folders retrieved successfully', HttpStatusCode::SUCCESS->value);
     }
     public function userHasAtLeastOneFolder()
     {
-        $user=User::query()->
-        has('folder')->get();
-        return response()->json($user, HttpStatusCode::SUCCESS->value);
+        $cacheKey = 'users_with_folder';
+        $users = Redis::get($cacheKey);
+
+        if ($users === null) {
+            $users = User::whereHas('folders')
+                ->select(['id', 'name'])
+                ->get()
+                ->toArray();
+            Redis::setex($cacheKey, 3600, json_encode($users));
+        } else {
+            $users = json_decode($users, true);
+        }
+
+        return $this->successResponse($users, 'Users with folders retrieved successfully', HttpStatusCode::SUCCESS->value);
     }
     public function userNoFile()
     {
-        $user=User::query()
-            ->doesntHave('file')->get();
-        return $user;
+        $cacheKey = 'users_no_file';
+        $users = Redis::get($cacheKey);
+
+        if ($users === null) {
+            $users = User::whereDoesntHave('files')
+                ->select(['id', 'name', 'email'])
+                ->get()
+                ->toArray();
+            Redis::setex($cacheKey, 3600, json_encode($users));
+        } else {
+            $users = json_decode($users, true);
+        }
+
+        return $this->successResponse($users, 'Users without files retrieved successfully', HttpStatusCode::SUCCESS->value);
     }
     public function userAtLeastFile()
     {
-    $user=User::query()->has('file')->get();
-    return $user;
+        $cacheKey = 'users_with_file';
+        $users = Redis::get($cacheKey);
+
+        if ($users === null) {
+            $users = User::whereHas('files')
+                ->select(['id', 'name'])
+                ->get()
+                ->toArray();
+            Redis::setex($cacheKey, 3600, json_encode($users));
+        } else {
+            $users = json_decode($users, true);
+        }
+
+        return $this->successResponse($users, 'Users with files retrieved successfully', HttpStatusCode::SUCCESS->value);
     }
     public function folderNoFile()
     {
-    $folder=Folder::query()->doesntHave('file')->get();
-    return $this->successResponse($folder,'success', HttpStatusCode::SUCCESS->value);
+        $cacheKey = 'folders_no_file';
+        $folders = Redis::get($cacheKey);
+
+        if ($folders === null) {
+            $folders = Folder::whereDoesntHave('files')
+                ->where('type', 'folder')
+                ->where('user_id', Auth::id())
+                ->select(['id', 'name', 'path', 'type'])
+                ->get()
+                ->toArray();
+            Redis::setex($cacheKey, 3600, json_encode($folders));
+        } else {
+            $folders = json_decode($folders, true);
+        }
+        return $this->successResponse($folders, 'Folders without files retrieved successfully', HttpStatusCode::SUCCESS->value);
     }
     public function betweenSize(Request $request)
     {
-        $folder=Folder::query()
-            ->whereBetween('size', [$request->from,$request->to])->get();
-        return $folder;
-
+        $request->validate([
+            'from' => 'required|integer|min:0',
+            'to' => 'required|integer|gte:from',
+        ]);
+        $cacheKey = 'folders_size_' . md5($request->from . '_' . $request->to);
+        $folders = Redis::get($cacheKey);
+        if ($folders === null) {
+            $folders = Folder::whereBetween('size', [$request->from, $request->to])
+                ->where('user_id', Auth::id())
+                ->select(['id', 'name', 'path', 'type', 'size'])
+                ->get()
+                ->toArray();
+            Redis::setex($cacheKey, 3600, json_encode($folders));
+        } else {
+            $folders = json_decode($folders, true);
+        }
+        return $this->successResponse($folders, 'Folders by size retrieved successfully', HttpStatusCode::SUCCESS->value);
+    }
+    protected function hasPermission($userId, $folderId, $permission)
+    {
+        if (is_null($folderId)) {
+            return Auth::id() == $userId;
+        }
+        $cacheKey = "permissions_{$userId}_{$folderId}_{$permission}";
+        $cachedPermission = Redis::get($cacheKey);
+        if ($cachedPermission !== null) {
+            return (bool) $cachedPermission;
+        }
+        $folder = Folder::find($folderId, ['user_id']);
+        if ($folder && $folder->user_id == $userId) {
+            Redis::setex($cacheKey, 3600, true);
+            return true;
+        }
+        $hasPermission = FolderPermission::where('user_id', $userId)
+            ->where('folder_id', $folderId)
+            ->where('permission', $permission)
+            ->exists();
+        Redis::setex($cacheKey, 3600, $hasPermission);
+        return $hasPermission;
     }
 }
 

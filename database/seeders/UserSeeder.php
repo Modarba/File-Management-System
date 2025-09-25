@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $user=User::create(['name'=>'user','email'=>'user@user.com','password'=>Hash::make('password')]

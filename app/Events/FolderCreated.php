@@ -14,10 +14,6 @@ use Illuminate\Queue\SerializesModels;
 class FolderCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    /**
-     * Create a new event instance.
-     */
     public function __construct(Folder $folder)
     {
         $this->folder=$folder;

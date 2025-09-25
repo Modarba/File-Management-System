@@ -3,8 +3,6 @@
 namespace App\Providers;
 
 use App\Events\InheritFolderPermissions;
-use App\Listeners\ApplyInheritedPermissions;
-use App\Listeners\AssignParentPermissions;
 use App\Models\Folder;
 use App\Observers\FolderObserver;
 use Illuminate\Auth\Events\Registered;
@@ -22,8 +20,6 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
-            InheritFolderPermissions::class,
-            ApplyInheritedPermissions::class
         ],
     ];
 
